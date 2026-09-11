@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QUESTIONS } from './questions';
 import { QuizState, UserAnswers, OptionKey, Question } from './types';
 import Timer from './components/Timer';
@@ -46,6 +46,21 @@ const App: React.FC = () => {
   const handleTogglePause = () => {
     setIsPaused((prev) => !prev);
   };
+
+  // Hidden shortcut: Ctrl+Shift+P toggles pause while the quiz is active
+  useEffect(() => {
+    if (quizState !== 'active') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.code === 'KeyP') {
+        e.preventDefault();
+        if (!e.repeat) handleTogglePause();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [quizState]);
 
   const handleAnswerSelect = (opt: OptionKey) => {
     setUserAnswers((prev) => {
@@ -217,15 +232,6 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {quizState === 'active' && (
-              <button
-                onClick={handleTogglePause}
-                className="btn-secondary !p-2 !rounded-xl flex items-center justify-center"
-                title={isPaused ? 'Resume quiz' : 'Pause quiz'}
-              >
-                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-              </button>
-            )}
             <Timer
               timeRemaining={timeRemaining}
               setTimeRemaining={setTimeRemaining}
