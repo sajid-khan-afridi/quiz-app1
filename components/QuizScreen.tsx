@@ -1,13 +1,13 @@
 import React from 'react';
-import { Question } from '../types';
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
+import { Question, OptionKey } from '../types';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface QuizScreenProps {
   question: Question;
   currentIndex: number;
   totalQuestions: number;
-  selectedAnswer?: 'A' | 'B' | 'C' | 'D';
-  onSelectAnswer: (answer: 'A' | 'B' | 'C' | 'D') => void;
+  selectedAnswers: OptionKey[];
+  onSelectAnswer: (answer: OptionKey) => void;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -16,12 +16,14 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   question,
   currentIndex,
   totalQuestions,
-  selectedAnswer,
+  selectedAnswers,
   onSelectAnswer,
   onNext,
   onPrev
 }) => {
-  const options = ['A', 'B', 'C', 'D'] as const;
+  const options = (['A', 'B', 'C', 'D', 'E'] as const).filter((k) => question.options[k]);
+  const isSelectTwo = question.selectCount === 2;
+  const limitReached = isSelectTwo && selectedAnswers.length >= 2;
 
   return (
     <div className="max-w-6xl mx-auto px-4 pb-28 pt-8">
@@ -57,46 +59,61 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
             </div>
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold text-white leading-relaxed">
+          <h2 className="text-xl md:text-2xl font-bold text-white leading-relaxed whitespace-pre-line">
             {question.text}
           </h2>
+
+          {isSelectTwo ? (
+            <p className="mt-3 text-sm font-semibold text-accent underline">Select TWO answers</p>
+          ) : (
+            <p className="mt-3 text-sm font-medium text-gray-500">Select ONE answer</p>
+          )}
         </div>
 
         {/* Options */}
         <div className="p-6 md:p-8 pt-4 space-y-3 stagger-children">
-          {options.map((opt, index) => (
-            <button
-              key={opt}
-              onClick={() => onSelectAnswer(opt)}
-              className={`option-card w-full text-left flex items-start gap-4 group opacity-0 animate-slide-in ${
-                selectedAnswer === opt ? 'selected' : ''
-              }`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <div className="option-badge">
-                {selectedAnswer === opt ? (
-                  <CheckCircle2 className="w-5 h-5" />
-                ) : (
-                  opt
-                )}
-              </div>
+          {options.map((opt, index) => {
+            const isSelected = selectedAnswers.includes(opt);
+            const isDisabled = !isSelected && limitReached;
 
-              <span className={`text-base md:text-lg pt-0.5 flex-1 transition-colors ${
-                selectedAnswer === opt
-                  ? 'text-white font-medium'
-                  : 'text-gray-300 group-hover:text-white'
-              }`}>
-                {question.options[opt]}
-              </span>
+            return (
+              <label
+                key={opt}
+                className={`option-card w-full text-left flex items-start gap-4 group opacity-0 animate-slide-in ${
+                  isSelected ? 'selected' : ''
+                } ${isDisabled ? 'disabled' : ''}`}
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <input
+                  type={isSelectTwo ? 'checkbox' : 'radio'}
+                  name={`question-${question.id}`}
+                  checked={isSelected}
+                  disabled={isDisabled}
+                  onChange={() => onSelectAnswer(opt)}
+                  className="mt-1 w-5 h-5 shrink-0"
+                />
 
-              {/* Selection indicator line */}
-              <div className={`w-1 self-stretch rounded-full transition-all ${
-                selectedAnswer === opt
-                  ? 'bg-accent'
-                  : 'bg-transparent group-hover:bg-muted'
-              }`} />
-            </button>
-          ))}
+                <div className="option-badge">
+                  {opt}
+                </div>
+
+                <span className={`text-base md:text-lg pt-0.5 flex-1 transition-colors ${
+                  isSelected
+                    ? 'text-white font-medium'
+                    : 'text-gray-300 group-hover:text-white'
+                }`}>
+                  {question.options[opt]}
+                </span>
+
+                {/* Selection indicator line */}
+                <div className={`w-1 self-stretch rounded-full transition-all ${
+                  isSelected
+                    ? 'bg-accent'
+                    : 'bg-transparent group-hover:bg-muted'
+                }`} />
+              </label>
+            );
+          })}
         </div>
       </div>
 

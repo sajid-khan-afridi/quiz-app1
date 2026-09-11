@@ -1,15 +1,17 @@
-# Agentic AI Mastery Quiz
+# PCAO-F Practice Quiz
 
-A comprehensive MCQ assessment application for testing knowledge on Agentic AI, Agent Factories, and enterprise automation protocols (Chapters 1–3).
+A practice assessment application for the Claude Certified Associate – Foundations (CCAO-F) certification, covering all seven exam domains.
 
-Built with React, TypeScript, Vite, and powered by Google Gemini AI for intelligent tutoring.
+Built with React, TypeScript, and Vite.
 
 ## Features
 
-- **65 Multiple Choice Questions** covering Agentic AI concepts, Agent Factory architecture, Spec-Driven Development, monetization models, security frameworks, and more
-- **90-Minute Timed Assessment** with visual countdown and warning states
-- **AI Tutor** — get on-demand explanations from Google Gemini for any question after completing the quiz
-- **Detailed Results** — animated score ring, grade classification, and per-question review with correct/incorrect breakdown
+- **60 Questions** — 50 Select ONE (four options) and 10 Select TWO (five options, exactly two correct answers)
+- **120-Minute Timed Assessment** with visual countdown and warning states
+- **Shuffled Question Order** — every attempt (including retakes) gets a fresh order
+- **1,000-Point Scaled Score** with a 720 pass mark and Pass/Fail/Excellent/Outstanding grade levels
+- **Score by Topic Area** — a per-domain (D1–D7) points and percentage breakdown
+- **Written Explanations** — every question includes an explanation and lesson-source links, no AI lookup required
 - **Modern Dark UI** — "Neural Network Noir" theme with glassmorphism, animated backgrounds, and smooth transitions
 - **Responsive Design** — optimized for desktop and mobile
 
@@ -21,7 +23,6 @@ Built with React, TypeScript, Vite, and powered by Google Gemini AI for intellig
 | Build     | Vite 6                              |
 | Styling   | Tailwind CSS + Custom CSS           |
 | Icons     | Lucide React                        |
-| AI        | Google Gemini (`gemini-3-flash-preview`) |
 | Fonts     | Outfit, JetBrains Mono              |
 
 ## Live Demo
@@ -33,7 +34,6 @@ Built with React, TypeScript, Vite, and powered by Google Gemini AI for intellig
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18 or later recommended)
-- A [Google Gemini API key](https://ai.google.dev/) (optional, for AI Tutor feature)
 
 ### Installation
 
@@ -45,16 +45,6 @@ cd quiz_app-ch1_to_ch3
 # Install dependencies
 npm install
 ```
-
-### Environment Setup
-
-Create a `.env.local` file in the project root:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-> The AI Tutor feature requires a valid Gemini API key. The quiz itself works without it.
 
 ### Running the App
 
@@ -71,6 +61,8 @@ npm run build
 npm run preview
 ```
 
+No environment variables or API keys are required.
+
 ## Project Structure
 
 ```
@@ -79,14 +71,15 @@ npm run preview
 ├── index.html               # HTML shell with Tailwind config
 ├── index.css                # Custom theme (Neural Network Noir)
 ├── types.ts                 # TypeScript interfaces
-├── questions.ts             # 65 MCQ questions with answers & explanations
+├── questions.ts             # 60 PCAO-F questions — generated, do not edit directly
+├── questions-answers/       # Source of truth for quiz content (markdown)
+├── scripts/
+│   └── generate-questions.mjs  # Rebuilds questions.ts from questions-answers/
 ├── components/
 │   ├── QuizScreen.tsx       # Question display & option selection
-│   ├── ResultScreen.tsx     # Score display, review & AI tutor
+│   ├── ResultScreen.tsx     # Score display, per-domain breakdown & review
 │   ├── Timer.tsx            # Countdown timer
 │   └── ProgressBar.tsx      # Progress indicator
-├── services/
-│   └── geminiService.ts     # Google Gemini API integration
 ├── vite.config.ts           # Vite configuration
 ├── tsconfig.json            # TypeScript configuration
 └── package.json             # Dependencies & scripts
@@ -94,24 +87,28 @@ npm run preview
 
 ## How It Works
 
-1. **Intro Screen** — Displays author info with social links (LinkedIn, YouTube, GitHub) at the top, followed by the three chapter titles covered in the quiz (The AI Agent Factory Paradigm, Markdown - Writing Instructions, Working with General Agents), stats cards (question count, time limit, AI tutor badge), and a "Begin Assessment" button
-2. **Quiz Screen** — Presents questions one at a time with A/B/C/D options, navigation controls, progress bar, and countdown timer
-3. **Result Screen** — Shows animated score ring, grade (Outstanding/Excellent/Good/Passing/Keep Learning), and expandable per-question review
-4. **AI Tutor** — Click "Ask AI to explain further" on any question in the review to get a Gemini-powered explanation
+1. **Intro Screen** — Displays author info with social links (LinkedIn, YouTube, GitHub) at the top, followed by the seven topic areas covered by the quiz, stats cards (question count, time limit, topic-area count), and a "Begin Assessment" button
+2. **Quiz Screen** — Presents questions one at a time in shuffled order. Select ONE questions show radio buttons and a plain "Select ONE answer" label; Select TWO questions show checkboxes (capped at two picks) and a coloured, underlined "Select TWO answers" label, alongside navigation controls, a progress bar, and a countdown timer
+3. **Result Screen** — Shows an animated score ring with the 1,000-point score, a Pass/Fail grade with Excellent/Outstanding levels, a score-by-topic-area grid, and an expandable per-question review with explanations and lesson-source links
 
-## Quiz Topics (Chapters 1–3)
+## Topic Areas (CCAO-F Domains)
 
-- Three Waves of AI (Predictive, Generative, Agentic)
-- Agent Factory Architecture & Workflow
-- General Agents vs Custom Agents vs Coding Agents
-- Agent Skills (SKILL.md) & Model Context Protocol (MCP)
-- Spec-Driven Development vs Vibe Coding
-- Enterprise Architecture Shift (Tool-Centric → Agent-Centric)
-- Agent Evals, Golden Dataset & Regression Testing
-- Monetization Models (Digital FTE, Success Fee, License, Skill Marketplace)
-- Security & Compliance Framework
-- Scaling Paradox & Cloud Native Deployment
-- Case Studies (CoCounsel, Digital SDR)
+- **D1** — Prompting and Task Execution
+- **D2** — Output Evaluation and Validation
+- **D3** — Product and Model Selection
+- **D4** — Workflow Integration and Solution Design
+- **D5** — Configuration and Knowledge Management
+- **D6** — Governance, Risk, and Responsible Use
+- **D7** — Troubleshooting and Optimization
+
+## Updating Questions
+
+Quiz content lives in `questions-answers/` (markdown), not in `questions.ts`. To change a question, its answer, or its explanation:
+
+1. Edit the relevant file in `questions-answers/`.
+2. Run `npm run gen:questions` to regenerate `questions.ts`.
+
+The script validates the parsed data (question counts, option letters, Select TWO ids, and the answer grid) and fails loudly if anything doesn't match.
 
 ## Deployment
 
@@ -125,8 +122,7 @@ To deploy your own:
    - **Framework preset:** Vite
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
-4. Add environment variable: `GEMINI_API_KEY` = your key
-5. Click **Save and Deploy**
+4. Click **Save and Deploy**
 
 ## License
 

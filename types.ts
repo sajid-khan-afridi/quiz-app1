@@ -1,3 +1,5 @@
+export type OptionKey = 'A' | 'B' | 'C' | 'D' | 'E';
+
 export interface Question {
   id: number;
   text: string;
@@ -6,13 +8,17 @@ export interface Question {
     B: string;
     C: string;
     D: string;
+    E?: string;
   };
-  correctAnswer: 'A' | 'B' | 'C' | 'D';
+  selectCount: 1 | 2;
+  correctAnswers: OptionKey[];
   explanation: string;
+  domain: string;
+  sources: { label: string; url: string }[];
 }
 
 export type QuizState = 'intro' | 'active' | 'finished';
 
 export interface UserAnswers {
-  [questionId: number]: 'A' | 'B' | 'C' | 'D';
+  [questionId: number]: OptionKey[];
 }

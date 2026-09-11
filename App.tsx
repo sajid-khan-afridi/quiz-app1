@@ -1,26 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { QUESTIONS } from './questions';
-import { QuizState, UserAnswers } from './types';
+import { QuizState, UserAnswers, OptionKey, Question } from './types';
 import Timer from './components/Timer';
 import ProgressBar from './components/ProgressBar';
 import QuizScreen from './components/QuizScreen';
 import ResultScreen from './components/ResultScreen';
 import { Brain, Zap, Clock, Target, Sparkles, Pause, Play, Linkedin, Youtube, Github } from 'lucide-react';
 
-// 90 Minutes in Seconds
-const TOTAL_TIME = 90 * 60;
+// 120 Minutes in Seconds
+const TOTAL_TIME = 120 * 60;
+
+const TOPIC_AREAS = Array.from(new Set(QUESTIONS.map((q) => q.domain))).sort();
+
+function shuffleQuestions(questions: Question[]): Question[] {
+  const shuffled = [...questions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 const App: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>('intro');
+  const [quizQuestions, setQuizQuestions] = useState<Question[]>(QUESTIONS);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<UserAnswers>({});
   const [timeRemaining, setTimeRemaining] = useState(TOTAL_TIME);
   const [isPaused, setIsPaused] = useState(false);
 
-  const currentQuestionId = QUESTIONS[currentQuestionIndex].id;
-  const currentSelectedAnswer = userAnswers[currentQuestionId];
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+  const currentQuestionId = currentQuestion.id;
+  const currentSelectedAnswers = userAnswers[currentQuestionId] ?? [];
 
   const handleStart = () => {
+    setQuizQuestions(shuffleQuestions(QUESTIONS));
     setQuizState('active');
     setTimeRemaining(TOTAL_TIME);
     setCurrentQuestionIndex(0);
@@ -33,15 +47,28 @@ const App: React.FC = () => {
     setIsPaused((prev) => !prev);
   };
 
-  const handleAnswerSelect = (answer: 'A' | 'B' | 'C' | 'D') => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [currentQuestionId]: answer
-    }));
+  const handleAnswerSelect = (opt: OptionKey) => {
+    setUserAnswers((prev) => {
+      const existing = prev[currentQuestionId] ?? [];
+
+      if (currentQuestion.selectCount === 1) {
+        return { ...prev, [currentQuestionId]: [opt] };
+      }
+
+      if (existing.includes(opt)) {
+        return { ...prev, [currentQuestionId]: existing.filter((a) => a !== opt) };
+      }
+
+      if (existing.length >= 2) {
+        return prev;
+      }
+
+      return { ...prev, [currentQuestionId]: [...existing, opt] };
+    });
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
+    if (currentQuestionIndex < quizQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       window.scrollTo(0, 0);
     } else {
@@ -107,16 +134,19 @@ const App: React.FC = () => {
               <Sparkles className="w-5 h-5 text-secondary absolute -top-2 -right-2 animate-pulse" />
             </div>
 
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-6">
+              PCAO-F Practice Quiz
+            </h1>
+
             <div className="space-y-3 text-left max-w-lg mx-auto">
-              <p className="text-lg md:text-xl text-white font-semibold">
-                <span className="text-accent">Chapter 1:</span> The AI Agent Factory Paradigm
-              </p>
-              <p className="text-lg md:text-xl text-white font-semibold">
-                <span className="text-accent">Chapter 2:</span> Markdown - Writing Instructions
-              </p>
-              <p className="text-lg md:text-xl text-white font-semibold">
-                <span className="text-accent">Chapter 3:</span> Working with General Agents: Claude Code and Cowork
-              </p>
+              {TOPIC_AREAS.map((domain) => {
+                const [tag, ...rest] = domain.split(' · ');
+                return (
+                  <p key={domain} className="text-lg md:text-xl text-white font-semibold">
+                    <span className="text-accent">{tag}:</span> {rest.join(' · ')}
+                  </p>
+                );
+              })}
             </div>
           </div>
 
@@ -134,7 +164,7 @@ const App: React.FC = () => {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 mx-auto mb-3">
                 <Clock className="w-5 h-5 text-secondary" />
               </div>
-              <span className="block text-2xl font-bold text-white mb-1">90</span>
+              <span className="block text-2xl font-bold text-white mb-1">{TOTAL_TIME / 60}</span>
               <span className="text-sm text-gray-500 font-medium">Minutes</span>
             </div>
 
@@ -142,8 +172,8 @@ const App: React.FC = () => {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-tertiary/10 mx-auto mb-3">
                 <Zap className="w-5 h-5 text-tertiary" />
               </div>
-              <span className="block text-2xl font-bold text-white mb-1">AI</span>
-              <span className="text-sm text-gray-500 font-medium">Tutor</span>
+              <span className="block text-2xl font-bold text-white mb-1">{TOPIC_AREAS.length}</span>
+              <span className="text-sm text-gray-500 font-medium">Topic areas</span>
             </div>
           </div>
 
@@ -178,12 +208,12 @@ const App: React.FC = () => {
               <Brain className="w-5 h-5 text-accent" />
             </div>
             <span className="hidden sm:inline font-semibold text-white">
-              Agentic AI Quiz
+              PCAO-F Practice Quiz
             </span>
           </div>
 
           <div className="flex-1 max-w-md mx-4 md:mx-8">
-            <ProgressBar current={currentQuestionIndex + 1} total={QUESTIONS.length} />
+            <ProgressBar current={currentQuestionIndex + 1} total={quizQuestions.length} />
           </div>
 
           <div className="flex items-center gap-2">
@@ -210,17 +240,17 @@ const App: React.FC = () => {
       <main className="flex-1 w-full max-w-6xl mx-auto">
         {quizState === 'active' ? (
           <QuizScreen
-            question={QUESTIONS[currentQuestionIndex]}
+            question={currentQuestion}
             currentIndex={currentQuestionIndex}
-            totalQuestions={QUESTIONS.length}
-            selectedAnswer={currentSelectedAnswer}
+            totalQuestions={quizQuestions.length}
+            selectedAnswers={currentSelectedAnswers}
             onSelectAnswer={handleAnswerSelect}
             onNext={handleNext}
             onPrev={handlePrev}
           />
         ) : (
           <ResultScreen
-            questions={QUESTIONS}
+            questions={quizQuestions}
             userAnswers={userAnswers}
             onRestart={handleStart}
           />
